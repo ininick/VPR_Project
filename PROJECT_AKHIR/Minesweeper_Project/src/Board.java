@@ -1,157 +1,71 @@
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Random;
 
-public class Board extends JPanel implements ActionListener {
-    private int rows;
-    private int cols;
-    private int numMines;
-    private GameBoard[][] cells;
+public class Board {
+    private Cell[][] cells;
+    private int numRows, numCols, numMines;
 
-    public Board(int rows, int cols, int numMines) {
-        this.rows = rows;
-        this.cols = cols;
+    public Board(int numRows, int numCols, int numMines) {
+        this.numRows = numRows;
+        this.numCols = numCols;
         this.numMines = numMines;
-        this.cells = new GameBoard[rows][cols];
+        cells = new Cell[numRows][numCols];
+        initialize();
+        placeMines();
+        calculateNeighboringMines();
+    }
 
-        setLayout(new GridLayout(rows, cols));
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                GameBoard cell = new GameBoard(row, col);
-                cell.setPreferredSize(new Dimension(55, 55));
-                cell.addActionListener(this);
-                cells[row][col] = cell;
-                add(cell);
+    private void initialize() {
+        for (int row = 0; row < numRows; row++) {
+            for (int col = 0; col < numCols; col++) {
+                cells[row][col] = new Cell();
             }
         }
     }
 
-    // public void actionPerformed(ActionEvent e) {
-    //     GameBoard cell = (GameBoard) e.getSource();
-    //     int row = cell.getRow();
-    //     int col = cell.getCol();
-    //     if (!cell.isFlagged()) {
-    //         if (cell.isMine()) {
-    //             revealAllMines();
-    //             JOptionPane.showMessageDialog(this, "Game Over!");
-    //         } else {
-    //             int numAdjacentMines = getNumAdjacentMines(row, col);
-    //             if (numAdjacentMines == 0) {
-    //                 revealEmptyCells(row, col);
-    //             } else {
-    //                 cell.setText(String.valueOf(numAdjacentMines));
-    //             }
-    //             cell.setRevealed(true);
-    //             checkWin();
-    //         }
-    //     }
-    // }
-
-    public void actionPerformed(ActionEvent e) {
-        GameBoard cell = (GameBoard) e.getSource();
-        int row = cell.getRow();
-        int col = cell.getCol();
-        if (!cell.isFlagged()) {
-            if (cell.isMine()) {
-                cell.setBomb();
-                revealAllMines();
-                JOptionPane.showMessageDialog(this, "Game Over!");
-            } else {
-                int numAdjacentMines = getNumAdjacentMines(row, col);
-                if (numAdjacentMines == 0) {
-                    revealEmptyCells(row, col);
-                } else {
-                    cell.setNumber(numAdjacentMines);
-                }
-                cell.setRevealed(true);
-                checkWin();
-            }
-        } else {
-            cell.setFlag();
-            cell.setFlagged(false);
-        }
-    }
-    
-
-    private int getNumAdjacentMines(int row, int col) {
-        int numAdjacentMines = 0;
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                int r = row + i;
-                int c = col + j;
-                if (r >= 0 && r < rows && c >= 0 && c < cols){
-                    if (cells[r][c].isMine()) {
-                        numAdjacentMines++;
-                    }
-                }
-            }
-        }
-        return numAdjacentMines;
-    }
-
-    private void revealEmptyCells(int row, int col) {
-        for (int i = -1; i <= 1; i++) {
-            for (int j = -1; j <= 1; j++) {
-                int r = row + i;
-                int c = col + j;
-                if (r >= 0 && r < rows && c >= 0 && c < cols) {
-                    GameBoard cell = cells[r][c];
-                    if (!cell.isMine() && !cell.isRevealed()) {
-                        int numAdjacentMines = getNumAdjacentMines(r, c);
-                        if (numAdjacentMines == 0) {
-                            cell.setText("");
-                            cell.setRevealed(true);
-                            revealEmptyCells(r, c);
-                        } else {
-                            cell.setText(String.valueOf(numAdjacentMines));
-                            cell.setRevealed(true);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private void revealAllMines() {
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                GameBoard cell = cells[row][col];
-                if (cell.isMine()) {
-                    cell.setText("X");
-                    cell.setRevealed(true);
-                }
-            }
-        }
-    }
-
-    private void checkWin() {
-        int numRevealedCells = 0;
-        for (int row = 0; row < rows; row++) {
-            for (int col = 0; col < cols; col++) {
-                GameBoard cell = cells[row][col];
-                if (cell.isRevealed()) {
-                    numRevealedCells++;
-                }
-            }
-        }
-        int numCells = rows * cols;
-        int numSafeCells = numCells - numMines;
-        if (numRevealedCells == numSafeCells) {
-            revealAllMines();
-            JOptionPane.showMessageDialog(this, "You Win!");
-        }
-    }
-
-    public void placeMines() {
+    private void placeMines() {
+        Random random = new Random();
         int numMinesPlaced = 0;
         while (numMinesPlaced < numMines) {
-            int row = (int) (Math.random() * rows);
-            int col = (int) (Math.random() * cols);
+            int row = random.nextInt(numRows);
+            int col = random.nextInt(numCols);
             if (!cells[row][col].isMine()) {
                 cells[row][col].setMine(true);
                 numMinesPlaced++;
             }
         }
+    }
+
+    private void calculateNeighboringMines() {
+        for (int row = 0; row < numRows; row++) {
+            for (int col = 0; col < numCols; col++) {
+                if (!cells[row][col].isMine()) {
+                    int neighboringMines = 0;
+                    for (int i = row - 1; i <= row + 1; i++) {
+                        for (int j = col - 1; j <= col + 1; j++) {
+                            if (i >= 0 && i < numRows && j >= 0 && j < numCols && cells[i][j].isMine()) {
+                                neighboringMines++;
+                            }
+                        }
+                    }
+                    cells[row][col].setNeighboringMines(neighboringMines);
+                }
+            }
+        }
+    }
+
+    public Cell getCell(int row, int col) {
+        return cells[row][col];
+    }
+
+    public int getNumRows() {
+        return numRows;
+    }
+
+    public int getNumCols() {
+        return numCols;
+    }
+
+    public int getNumMines() {
+        return numMines;
     }
 }

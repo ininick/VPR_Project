@@ -1,16 +1,14 @@
-import javax.swing.*;
-import java.awt.*;
-
-public class Cell extends JButton {
+public class Cell {
     private boolean isMine;
     private boolean isRevealed;
+    private boolean isFlagged;
+    private int neighboringMines;
 
     public Cell() {
-        setBackground(Color.LIGHT_GRAY);
-        setOpaque(true);
-        setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 20));
-        setPreferredSize(new Dimension(30, 30));
+        isMine = false;
+        isRevealed = false;
+        isFlagged = false;
+        neighboringMines = 0;
     }
 
     public boolean isMine() {
@@ -20,12 +18,28 @@ public class Cell extends JButton {
     public void setMine(boolean mine) {
         isMine = mine;
     }
-
+    
     public boolean isRevealed() {
         return isRevealed;
     }
 
     public void setRevealed(boolean revealed) {
         isRevealed = revealed;
+    }
+
+    public boolean isFlagged() {
+        return isFlagged;
+    }
+
+    public void setFlagged(boolean flagged) {
+        isFlagged = flagged;
+    }
+
+    public int getNeighboringMines() {
+        return neighboringMines;
+    }
+
+    public void setNeighboringMines(int neighboringMines) {
+        this.neighboringMines = neighboringMines;
     }
 }
